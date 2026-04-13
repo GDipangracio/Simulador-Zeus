@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OLIMPO · Torre Zeus · Simulador de Financiación</title>
+<style>
+  :root {
+    --gold: #8B6914;
+    --gold-light: #F5EDD6;
+    --gold-mid: #C9A84C;
+    --negro: #1A1A1A;
+    --gris: #555555;
+    --gris-claro: #888888;
+    --gris-bg: #F2F2F2;
+    --verde-bg: #E8F4EC;
+    --verde: #2E6B3E;
+    --azul-bg: #E8F0FA;
+    --azul: #1A3F6F;
+    --blanco: #FFFFFF;
+    --borde: #E0E0E0;
+    --rojo-bg: #FDECEA;
+    --rojo: #A32D2D;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    background: #F7F5F0;
+    color: var(--negro);
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  .header {
+    background: var(--negro);
+    color: var(--blanco);
+    padding: 2rem 2.5rem 1.5rem;
+    border-bottom: 4px solid var(--gold);
+  }
+
+  .header-marca {
+    font-size: 2.2rem;
+    font-weight: 400;
+    letter-spacing: 0.25em;
+    color: var(--gold-mid);
+    font-family: 'Georgia', serif;
+  }
+
+  .header-sub {
+    font-size: 0.85rem;
+    color: #AAA;
+    letter-spacing: 0.1em;
+    margin-top: 0.3rem;
+    font-family: Arial, sans-serif;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 3rem;
+  }
+
+  .card {
+    background: var(--blanco);
+    border: 1px solid var(--borde);
+    border-radius: 10px;
+    padding: 1.75rem 2rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .card-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-family: Arial, sans-serif;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--gold-light);
+  }
+
+  .form-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .form-row label {
+    font-size: 0.82rem;
+    color: var(--gris);
+    width: 180px;
+    flex-shrink: 0;
+    font-family: Arial, sans-serif;
+  }
+
+  select, input[type=range] {
+    flex: 1;
+  }
+
+  select {
+    padding: 8px 12px;
+    border: 1px solid var(--borde);
+    border-radius: 6px;
+    background: #FAFAFA;
+    color: var(--negro);
+    font-size: 0.85rem;
+    font-family: Arial, sans-serif;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+  }
+
+  select:focus { outline: none; border-color: var(--gold); }
+
+  input[type=range] {
+    height: 4px;
+    accent-color: var(--gold);
+    cursor: pointer;
+  }
+
+  .out-val {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--negro);
+    min-width: 100px;
+    text-align: right;
+    font-family: Arial, sans-serif;
+  }
+
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 1.5rem;
+  }
+
+  @media (max-width: 640px) {
+    .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  .metric {
+    background: var(--gris-bg);
+    border-radius: 8px;
+    padding: 1rem 1.1rem;
+  }
+
+  .metric-label {
+    font-size: 0.7rem;
+    color: var(--gris-claro);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-family: Arial, sans-serif;
+    margin-bottom: 0.35rem;
+  }
+
+  .metric-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--negro);
+    font-family: Arial, sans-serif;
+  }
+
+  .metric-sub {
+    font-size: 0.7rem;
+    color: var(--gris-claro);
+    margin-top: 0.2rem;
+    font-family: Arial, sans-serif;
+  }
+
+  .metric.gold { background: var(--gold-light); }
+  .metric.gold .metric-value { color: var(--gold); }
+  .metric.verde { background: var(--verde-bg); }
+  .metric.verde .metric-value { color: var(--verde); }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: Arial, sans-serif;
+    font-size: 0.82rem;
+  }
+
+  thead th {
+    text-align: left;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--gris-claro);
+    font-weight: 600;
+    padding: 0 10px 10px 0;
+    border-bottom: 1px solid var(--borde);
+  }
+
+  tbody td {
+    padding: 10px 10px 10px 0;
+    border-bottom: 1px solid #F0F0F0;
+    vertical-align: top;
+    color: var(--negro);
+    line-height: 1.5;
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+
+  .badge {
+    display: inline-block;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-family: Arial, sans-serif;
+    white-space: nowrap;
+  }
+
+  .b-verde { background: var(--verde-bg); color: var(--verde); }
+  .b-gold { background: var(--gold-light); color: var(--gold); }
+  .b-azul { background: var(--azul-bg); color: var(--azul); }
+  .b-gris { background: var(--gris-bg); color: var(--gris); }
+
+  .alerta {
+    background: #FFF8E1;
+    border-left: 3px solid #F0A500;
+    border-radius: 0 6px 6px 0;
+    padding: 0.75rem 1rem;
+    font-size: 0.8rem;
+    color: #7A5800;
+    font-family: Arial, sans-serif;
+    margin-top: 1rem;
+    line-height: 1.5;
+    display: none;
+  }
+
+  .total-row td {
+    font-weight: 700;
+    padding-top: 14px;
+    border-top: 2px solid var(--borde) !important;
+    border-bottom: none !important;
+    font-size: 0.88rem;
+  }
+
+  .divider { height: 1px; background: var(--borde); margin: 1.5rem 0; }
+
+  .monto-pesos { font-size: 0.82rem; color: var(--negro); }
+  .monto-usd { font-size: 0.72rem; color: var(--gris-claro); display: block; margin-top: 1px; }
+
+  .footer {
+    text-align: center;
+    font-size: 0.72rem;
+    color: var(--gris-claro);
+    font-family: Arial, sans-serif;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--borde);
+    line-height: 1.8;
+  }
+
+  .tag-confidencial {
+    display: inline-block;
+    background: var(--negro);
+    color: var(--gold-mid);
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    padding: 3px 10px;
+    border-radius: 3px;
+    font-family: Arial, sans-serif;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+
+  .condiciones-lista {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 0;
+  }
+
+  @media (max-width: 640px) {
+    .condiciones-lista { grid-template-columns: 1fr; }
+    .form-row { flex-wrap: wrap; }
+    .form-row label { width: 100%; }
+  }
+
+  .condicion-item {
+    background: var(--gris-bg);
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    font-family: Arial, sans-serif;
+  }
+
+  .condicion-label {
+    font-size: 0.65rem;
+    color: var(--gris-claro);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.25rem;
+  }
+
+  .condicion-valor {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--negro);
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-marca">OLIMPO</div>
+  <div class="header-sub">Torre Zeus &nbsp;·&nbsp; Simulador de Financiación &nbsp;·&nbsp; Abril 2026</div>
+</div>
+
+<div class="container">
+
+  <div class="card">
+    <div class="card-title">Condiciones vigentes · 01/04/2026</div>
+    <div class="condiciones-lista">
+      <div class="condicion-item">
+        <div class="condicion-label">Entrada mínima</div>
+        <div class="condicion-valor">50%</div>
+      </div>
+      <div class="condicion-item">
+        <div class="condicion-label">Tasa anual</div>
+        <div class="condicion-valor">8% TNA sobre saldo</div>
+      </div>
+      <div class="condicion-item">
+        <div class="condicion-label">Plazo máximo</div>
+        <div class="condicion-valor">60 meses</div>
+      </div>
+      <div class="condicion-item">
+        <div class="condicion-label">Moneda</div>
+        <div class="condicion-valor">USD o $ ajust. CAC</div>
+      </div>
+      <div class="condicion-item">
+        <div class="condicion-label">Descuento contado</div>
+        <div class="condicion-valor">5%</div>
+      </div>
+      <div class="condicion-item">
+        <div class="condicion-label">Período de gracia</div>
+        <div class="condicion-valor">Hasta 12 meses (con costo)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Selección de unidad y modalidad</div>
+
+    <div class="form-row">
+      <label>Unidad</label>
+      <select id="selUnidad" onchange="recalc()">
+        <optgroup label="Tipología A · 3 dormitorios · Norte">
+          <option value="673000000|2|A|141.45">Piso 2 · Depto A · 141,45 m²</option>
+          <option value="583500000|4|A|141.45">Piso 4 · Depto A · 141,45 m²</option>
+          <option value="595900000|5|A|141.45">Piso 5 · Depto A · 141,45 m²</option>
+          <option value="600900000|8|A|133.3">Piso 8 · Depto A · 133,30 m²</option>
+          <option value="612800000|9|A|133.3" selected>Piso 9 · Depto A · 133,30 m²</option>
+          <option value="625100000|10|A|133.3">Piso 10 · Depto A · 133,30 m²</option>
+        </optgroup>
+        <optgroup label="Tipología B · 2 dormitorios · Sur">
+          <option value="415100000|8|B|83.72">Piso 8 · Depto B · 83,72 m²</option>
+          <option value="423400000|9|B|83.72">Piso 9 · Depto B · 83,72 m²</option>
+          <option value="431500000|10|B|83.72">Piso 10 · Depto B · 83,72 m²</option>
+        </optgroup>
+        <optgroup label="Tipología C · 2 dormitorios · Sur">
+          <option value="300100000|2|C|64">Piso 2 · Depto C · 64,00 m²</option>
+          <option value="259500000|4|C|64">Piso 4 · Depto C · 64,00 m²</option>
+          <option value="270900000|6|C|64">Piso 6 · Depto C · 64,00 m²</option>
+          <option value="303800000|7|C|70.68">Piso 7 · Depto C · 70,68 m²</option>
+          <option value="316300000|9|C|70.68">Piso 9 · Depto C · 70,68 m²</option>
+          <option value="322700000|10|C|70.68">Piso 10 · Depto C · 70,68 m²</option>
+        </optgroup>
+      </select>
+    </div>
+
+    <div class="form-row">
+      <label>Modalidad</label>
+      <select id="selModalidad" onchange="recalc()">
+        <option value="financiado" selected>Financiado</option>
+        <option value="contado">Contado (−5%)</option>
+      </select>
+    </div>
+
+    <div id="bloqueFinanciado">
+      <div class="divider"></div>
+
+      <div class="form-row">
+        <label>Entrada inicial</label>
+        <input type="range" min="50" max="80" value="50" step="5" id="sliderEntrada" oninput="recalc()">
+        <span class="out-val" id="outEntrada">50%</span>
+      </div>
+
+      <div class="form-row">
+        <label>Plazo financiación</label>
+        <input type="range" min="12" max="60" value="36" step="12" id="sliderPlazo" oninput="recalc()">
+        <span class="out-val" id="outPlazo">36 meses</span>
+      </div>
+
+      <div class="form-row">
+        <label>Período de gracia</label>
+        <input type="range" min="0" max="12" value="0" step="3" id="sliderGracia" oninput="recalc()">
+        <span class="out-val" id="outGracia">Sin gracia</span>
+      </div>
+
+      <div class="form-row">
+        <label>Moneda del saldo</label>
+        <select id="selMoneda" onchange="recalc()">
+          <option value="cac" selected>Pesos ajustable CAC</option>
+          <option value="usd">USD</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Resumen de la operación</div>
+    <div class="metrics-grid" id="metricas"></div>
+
+    <div class="card-title" style="margin-top:1.25rem;">Cronograma de pagos</div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:22%">Tramo</th>
+          <th style="width:28%">Monto</th>
+          <th style="width:22%">Cuándo</th>
+          <th>Ajuste</th>
+        </tr>
+      </thead>
+      <tbody id="cronograma"></tbody>
+    </table>
+
+    <div class="alerta" id="alertaGracia"></div>
+  </div>
+
+  <div class="footer">
+    <div class="tag-confidencial">CONFIDENCIAL</div><br>
+    OLIMPO &nbsp;·&nbsp; Grupo Spahn &nbsp;·&nbsp; COAR Arquitectura y Construcción &nbsp;·&nbsp; Santa Fe, Argentina<br>
+    Las Heras 3041 · Barrio Candioti · +54 9 3424 47-3885 · olimpoedificios.com.ar<br><br>
+    Los valores calculados son orientativos. Las condiciones definitivas se formalizan en el boleto de compraventa.<br>
+    Tipo de cambio de referencia: dólar informal Ámbito Financiero del día de la operación.<br>
+    Documento de uso exclusivo para inmobiliarias certificadas OLIMPO. Prohibida su distribución.
+  </div>
+
+</div>
+
+<script>
+const TC = 1400;
+
+function fmt(n) {
+  return '$\u202f' + Math.round(n).toLocaleString('es-AR');
+}
+function fmtU(n) {
+  return 'u$s\u202f' + Math.round(n / TC).toLocaleString('es-AR');
+}
+function fmtUk(n) {
+  return 'u$s\u202f' + Math.round(n / TC / 1000) + 'k';
+}
+
+function recalc() {
+  const sel = document.getElementById('selUnidad').value.split('|');
+  const lista = parseFloat(sel[0]);
+  const piso = parseInt(sel[1]);
+  const tipo = sel[2];
+  const m2 = parseFloat(sel[3]);
+
+  const modalidad = document.getElementById('selModalidad').value;
+  document.getElementById('bloqueFinanciado').style.display = modalidad === 'financiado' ? 'block' : 'none';
+
+  const descuento = modalidad === 'contado' ? 0.05 : 0;
+  const precioNeto = lista * (1 - descuento);
+
+  const entPct = parseInt(document.getElementById('sliderEntrada').value) / 100;
+  const plazo = parseInt(document.getElementById('sliderPlazo').value);
+  const gracia = parseInt(document.getElementById('sliderGracia').value);
+  const moneda = document.getElementById('selMoneda').value;
+
+  document.getElementById('outEntrada').textContent = Math.round(entPct * 100) + '%';
+  document.getElementById('outPlazo').textContent = plazo + ' meses';
+  document.getElementById('outGracia').textContent = gracia === 0 ? 'Sin gracia' : gracia + ' meses';
+
+  const entrada = precioNeto * entPct;
+  const saldo = precioNeto * (1 - entPct);
+  const tasaMensual = 0.08 / 12;
+
+  let cuotaPura = 0;
+  let totalIntereses = 0;
+  if (modalidad === 'financiado' && saldo > 0 && plazo > 0) {
+    cuotaPura = saldo * tasaMensual / (1 - Math.pow(1 + tasaMensual, -plazo));
+    totalIntereses = cuotaPura * plazo - saldo;
+  }
+
+  const precioM2 = Math.round(precioNeto / TC / m2);
+
+  document.getElementById('metricas').innerHTML = `
+    <div class="metric">
+      <div class="metric-label">Precio lista</div>
+      <div class="metric-value">${fmtUk(lista)}</div>
+      <div class="metric-sub">${fmt(lista)}</div>
+    </div>
+    <div class="metric ${modalidad === 'contado' ? 'verde' : ''}">
+      <div class="metric-label">Precio neto${modalidad === 'contado' ? ' (−5%)' : ''}</div>
+      <div class="metric-value">${fmtUk(precioNeto)}</div>
+      <div class="metric-sub">${fmt(Math.round(precioNeto))}</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Precio por m²</div>
+      <div class="metric-value">u$s ${precioM2.toLocaleString('es-AR')}</div>
+      <div class="metric-sub">${m2} m² propios</div>
+    </div>
+    ${modalidad === 'financiado'
+      ? `<div class="metric gold">
+          <div class="metric-label">Cuota inicial estimada</div>
+          <div class="metric-value">${fmt(Math.round(cuotaPura))}</div>
+          <div class="metric-sub">8% TNA · ${plazo} meses</div>
+        </div>`
+      : `<div class="metric verde">
+          <div class="metric-label">Ahorro contado</div>
+          <div class="metric-value">${fmtUk(lista * 0.05)}</div>
+          <div class="metric-sub">${fmt(Math.round(lista * 0.05))}</div>
+        </div>`
+    }
+  `;
+
+  const tbody = document.getElementById('cronograma');
+
+  if (modalidad === 'contado') {
+    tbody.innerHTML = `
+      <tr>
+        <td><span class="badge b-verde">Pago único</span></td>
+        <td>
+          <span class="monto-pesos">${fmt(Math.round(precioNeto))}</span>
+          <span class="monto-usd">${fmtU(precioNeto)}</span>
+        </td>
+        <td>Al boleto / escritura</td>
+        <td style="color:#888;font-size:0.78rem;">Sin indexar · precio cerrado</td>
+      </tr>`;
+    document.getElementById('alertaGracia').style.display = 'none';
+    return;
+  }
+
+  let rows = '';
+
+  rows += `<tr>
+    <td><span class="badge b-verde">Entrada ${Math.round(entPct*100)}%</span></td>
+    <td>
+      <span class="monto-pesos">${fmt(Math.round(entrada))}</span>
+      <span class="monto-usd">${fmtU(entrada)}</span>
+    </td>
+    <td>Al boleto</td>
+    <td style="color:#888;font-size:0.78rem;">Sin indexar</td>
+  </tr>`;
+
+  let alertaMsg = '';
+  if (gracia > 0) {
+    const interesGracia = saldo * tasaMensual * gracia;
+    rows += `<tr>
+      <td><span class="badge b-gold">Período de gracia<br>${gracia} mes${gracia > 1 ? 'es' : ''}</span></td>
+      <td>
+        <span class="monto-pesos">${fmt(Math.round(interesGracia))}</span>
+        <span class="monto-usd">Solo intereses · ${fmtU(interesGracia)}</span>
+      </td>
+      <td>Meses 1 a ${gracia}</td>
+      <td style="color:#888;font-size:0.78rem;">${moneda === 'usd' ? 'USD · 8% TNA' : 'Pesos + CAC'}</td>
+    </tr>`;
+    alertaMsg = `Atención: el período de gracia tiene costo. Durante ${gracia} meses se abonan solo intereses sobre el saldo (total: ${fmt(Math.round(interesGracia))}). El capital no se amortiza en ese período.`;
+  }
+
+  const inicioAmort = gracia > 0 ? `Mes ${gracia + 1}` : 'Mes 1';
+  const finAmort = gracia + plazo;
+
+  rows += `<tr>
+    <td><span class="badge b-azul">Saldo ${100 - Math.round(entPct*100)}%<br>${plazo} cuotas</span></td>
+    <td>
+      <span class="monto-pesos">${fmt(Math.round(cuotaPura))}/mes</span>
+      <span class="monto-usd">${plazo} cuotas · total ${fmtU(cuotaPura * plazo)}</span>
+    </td>
+    <td>${inicioAmort} al ${finAmort}</td>
+    <td style="color:#888;font-size:0.78rem;">${moneda === 'usd' ? 'USD · 8% TNA' : 'Pesos · 8% TNA + CAC'}</td>
+  </tr>`;
+
+  const totalOp = entrada + (gracia > 0 ? saldo * tasaMensual * gracia : 0) + cuotaPura * plazo;
+  const pctIntereses = saldo > 0 ? ((totalIntereses / saldo) * 100).toFixed(1) : '0.0';
+
+  rows += `<tr class="total-row">
+    <td>Total operación</td>
+    <td>
+      <span class="monto-pesos">${fmt(Math.round(totalOp))}</span>
+      <span class="monto-usd">${fmtU(totalOp)}</span>
+    </td>
+    <td></td>
+    <td style="color:#888;font-size:0.75rem;">Intereses: ${fmtU(totalIntereses)} (${pctIntereses}% del saldo)</td>
+  </tr>`;
+
+  tbody.innerHTML = rows;
+
+  const alerta = document.getElementById('alertaGracia');
+  if (alertaMsg) {
+    alerta.textContent = alertaMsg;
+    alerta.style.display = 'block';
+  } else {
+    alerta.style.display = 'none';
+  }
+}
+
+recalc();
+</script>
+</body>
+</html>
